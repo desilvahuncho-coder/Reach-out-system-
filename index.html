@@ -1,0 +1,708 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Outreach HQ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg:#080d18;
+      --panel:#111a2a;
+      --panel2:#19243a;
+      --border:#29364c;
+      --text:#edf3fc;
+      --muted:#91a1b8;
+      --green:#31d58a;
+      --blue:#63a5ff;
+      --red:#fb7185;
+    }
+
+    * {box-sizing:border-box}
+
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Arial,sans-serif;
+    }
+
+    .app {display:flex;min-height:100vh}
+
+    aside {
+      width:225px;
+      background:#0d1525;
+      border-right:1px solid var(--border);
+      padding:25px 15px;
+      flex-shrink:0;
+    }
+
+    .logo {
+      font-size:21px;
+      font-weight:800;
+      margin-bottom:38px;
+    }
+
+    .logo span {color:var(--green)}
+
+    .nav {
+      padding:13px;
+      margin-bottom:7px;
+      border-radius:9px;
+      color:var(--muted);
+      cursor:pointer;
+    }
+
+    .nav.active,.nav:hover {
+      background:var(--panel2);
+      color:white;
+    }
+
+    main {
+      flex:1;
+      min-width:0;
+      padding:28px;
+    }
+
+    .top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+      margin-bottom:25px;
+    }
+
+    h1 {font-size:26px;margin:0 0 6px}
+    h2 {font-size:19px;margin:0 0 20px}
+    h3 {font-size:15px;margin:0 0 17px}
+
+    .muted {color:var(--muted);font-size:13px}
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .card,.panel {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:19px;
+      margin-bottom:17px;
+    }
+
+    .number {
+      font-size:30px;
+      font-weight:800;
+      margin:13px 0 6px;
+    }
+
+    .green {color:var(--green)}
+    .blue {color:var(--blue)}
+
+    .columns {
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:16px;
+    }
+
+    .chart {height:280px}
+
+    .bar {
+      background:#26354b;
+      height:8px;
+      border-radius:10px;
+      overflow:hidden;
+      margin:12px 0 20px;
+    }
+
+    .bar div {
+      height:100%;
+      width:0%;
+      background:var(--green);
+    }
+
+    .metric {
+      display:flex;
+      justify-content:space-between;
+      padding:11px 0;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+    }
+
+    button {
+      background:var(--green);
+      color:#05291a;
+      padding:11px 15px;
+      border:0;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    button.secondary {
+      background:var(--panel2);
+      color:white;
+      border:1px solid var(--border);
+    }
+
+    button.danger {
+      background:#7f1d1d;
+      color:white;
+    }
+
+    button:disabled {opacity:.4;cursor:not-allowed}
+
+    .actions {
+      display:flex;
+      gap:9px;
+      flex-wrap:wrap;
+      margin-bottom:17px;
+    }
+
+    .table-wrap {overflow-x:auto}
+
+    table {
+      width:100%;
+      min-width:650px;
+      border-collapse:collapse;
+    }
+
+    th,td {
+      text-align:left;
+      padding:13px 10px;
+      border-bottom:1px solid var(--border);
+      font-size:12px;
+    }
+
+    th {color:var(--muted)}
+
+    .status {
+      padding:5px 9px;
+      background:#17412e;
+      color:#8df0b6;
+      border-radius:20px;
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .status.draft {background:#493719;color:#fcd38d}
+    .status.replied {background:#173b5e;color:#93c5fd}
+
+    .templates {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    .template {
+      background:var(--panel2);
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:10px;
+    }
+
+    .template p {color:var(--muted);font-size:12px}
+
+    .notice {
+      padding:12px;
+      background:#17263b;
+      border-radius:8px;
+      margin-bottom:16px;
+      color:#c5d9f3;
+      font-size:13px;
+    }
+
+    .message {
+      color:var(--muted);
+      font-size:13px;
+      margin:12px 0;
+    }
+
+    .loading {opacity:.5;pointer-events:none}
+
+    .checkbox {width:17px;height:17px;accent-color:var(--green)}
+
+    @media(max-width:900px) {
+      aside {width:65px;padding:20px 7px}
+      .logo {font-size:11px}
+      .nav {font-size:0;text-align:center}
+      .nav:first-letter {font-size:18px}
+      main {padding:16px}
+      .grid {grid-template-columns:repeat(2,1fr)}
+      .columns {grid-template-columns:1fr}
+      .templates {grid-template-columns:1fr}
+    }
+
+    @media(max-width:480px) {
+      .top {align-items:flex-start}
+      h1 {font-size:21px}
+      .number {font-size:25px}
+      .card {padding:13px}
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+<aside>
+  <div class="logo">OUTREACH<span>HQ</span></div>
+  <div class="nav active">▦ Overview</div>
+  <div class="nav" onclick="showSection('leads')">♙ Leads</div>
+  <div class="nav" onclick="showSection('drafts')">✉ Drafts</div>
+  <div class="nav" onclick="showSection('templates')">▤ Templates</div>
+  <div class="nav" onclick="showSection('analytics')">◷ Analytics</div>
+</aside>
+
+<main id="main">
+
+  <div class="top">
+    <div>
+      <h1>Campaign overview</h1>
+      <div class="muted">Your cold outreach command center</div>
+    </div>
+    <button class="secondary" onclick="refresh()">↻ Refresh</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="muted">Total leads</div>
+      <div class="number" id="total">0</div>
+      <div class="muted">From Google Sheets</div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Drafts ready</div>
+      <div class="number green" id="drafts">0</div>
+      <div class="muted">Awaiting approval</div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Emails sent</div>
+      <div class="number blue" id="sent">0</div>
+      <div class="muted">Tracked campaign sends</div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Replies</div>
+      <div class="number" id="replied">0</div>
+      <div class="muted">Detected responses</div>
+    </div>
+  </div>
+
+  <div class="columns">
+
+    <div class="panel">
+      <h3>Campaign performance</h3>
+      <div class="chart">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Campaign progress</h3>
+      <div class="number green" id="progressText">0%</div>
+      <div class="bar"><div id="progressBar"></div></div>
+
+      <div class="metric">
+        <span>Daily target</span><b>50</b>
+      </div>
+      <div class="metric">
+        <span>Reply rate</span><b id="replyRate">0%</b>
+      </div>
+      <div class="metric">
+        <span>Positive replies</span><b>Manual tracking</b>
+      </div>
+      <div class="metric">
+        <span>Follow-ups due</span><b id="followupCount">0</b>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel" id="campaign">
+    <h2>Campaign controls</h2>
+    <div class="notice">
+      Your Google Sheet is the lead source. Review every draft before sending.
+    </div>
+
+    <div class="actions">
+      <button onclick="prepare()">Generate 50 drafts</button>
+      <button class="secondary" onclick="prepareFollowups()">
+        Generate due follow-ups
+      </button>
+      <button class="secondary" onclick="syncReplies()">
+        Sync replies
+      </button>
+    </div>
+    <div class="message" id="message">Ready to connect.</div>
+  </div>
+
+  <div class="panel" id="draftsSection">
+    <h2>Draft approval</h2>
+    <div class="actions">
+      <button class="secondary" onclick="selectAll()">Select all</button>
+      <button onclick="sendSelected()">Send selected drafts</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Lead</th>
+            <th>Company</th>
+            <th>Template</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="draftTable">
+          <tr><td colspan="5">Loading drafts...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="leads">
+    <h2>Lead database</h2>
+    <div class="muted">Synced from your Google Sheet.</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Email</th>
+            <th>Template</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="leadTable">
+          <tr><td colspan="5">Loading leads...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="templates">
+    <h2>Template rotation</h2>
+    <div class="templates">
+      <div class="template">
+        <h3>Template A</h3>
+        <p>Leads 1–5, 16–20, 31–35, 46–50.</p>
+      </div>
+      <div class="template">
+        <h3>Template B</h3>
+        <p>Leads 6–10, 21–25, 36–40.</p>
+      </div>
+      <div class="template">
+        <h3>Template C</h3>
+        <p>Leads 11–15, 26–30, 41–45.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:25px">Follow-up sequence</h3>
+    <div class="templates">
+      <div class="template">
+        <h3>Follow-up 1</h3>
+        <p>Day 3 after initial email.</p>
+      </div>
+      <div class="template">
+        <h3>Follow-up 2</h3>
+        <p>Day 7 after initial email.</p>
+      </div>
+      <div class="template">
+        <h3>Follow-up 3</h3>
+        <p>Day 14 after initial email.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="analytics">
+    <h2>Template performance</h2>
+    <div class="chart" style="height:230px">
+      <canvas id="templateChart"></canvas>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+let dashboardData = null;
+let performanceChart = null;
+let templateChart = null;
+
+function callServer(method, ...args) {
+  return new Promise((resolve, reject) => {
+    if (!google || !google.script || !google.script.run) {
+      reject(new Error("Open this dashboard through its Apps Script web app URL."));
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(error => reject(
+        new Error(error.message || String(error))
+      ))[method](...args);
+  });
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
+
+function notify(text) {
+  document.getElementById("message").textContent = text;
+}
+
+function statusClass(status) {
+  if (status === "Draft" || status === "Follow-up Draft") return "draft";
+  if (status === "Replied") return "replied";
+  return "";
+}
+
+async function refresh() {
+  notify("Loading campaign data...");
+
+  try {
+    dashboardData = await callServer("getDashboardData");
+    renderDashboard();
+    notify("Dashboard updated successfully.");
+  } catch (error) {
+    notify("Error: " + error.message);
+  }
+}
+
+function renderDashboard() {
+  const data = dashboardData;
+  if (!data) return;
+
+  const s = data.stats;
+
+  document.getElementById("total").textContent = s.total;
+  document.getElementById("drafts").textContent = s.drafts;
+  document.getElementById("sent").textContent = s.sent;
+  document.getElementById("replied").textContent = s.replied;
+  document.getElementById("replyRate").textContent = s.replyRate + "%";
+
+  const progress = Math.min(s.sent / s.dailyTarget * 100, 100);
+  document.getElementById("progressText").textContent =
+    progress.toFixed(0) + "%";
+  document.getElementById("progressBar").style.width =
+    progress + "%";
+
+  document.getElementById("followupCount").textContent =
+    data.leads.filter(l =>
+      l.followUpDate && l.status === "Sent"
+    ).length;
+
+  renderTables(data);
+  renderCharts(data);
+}
+
+function renderTables(data) {
+  const draftTable = document.getElementById("draftTable");
+
+  if (!data.drafts.length) {
+    draftTable.innerHTML =
+      '<tr><td colspan="5">No drafts waiting for approval.</td></tr>';
+  } else {
+    draftTable.innerHTML = data.drafts.map(d => `
+      <tr>
+        <td><input class="checkbox draftCheck" type="checkbox"
+          value="${escapeHTML(d.draftId)}"></td>
+        <td>${escapeHTML(d.name)}</td>
+        <td>${escapeHTML(d.company)}</td>
+        <td>${escapeHTML(d.template)}</td>
+        <td><span class="status draft">${escapeHTML(d.status)}</span></td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("leadTable").innerHTML =
+    data.leads.length ? data.leads.map(l => `
+      <tr>
+        <td>${escapeHTML(l.name)}</td>
+        <td>${escapeHTML(l.company)}</td>
+        <td>${escapeHTML(l.email)}</td>
+        <td>${escapeHTML(l.template)}</td>
+        <td><span class="status ${statusClass(l.status)}">
+          ${escapeHTML(l.status || "New")}
+        </span></td>
+      </tr>
+    `).join("") :
+    '<tr><td colspan="5">No leads found.</td></tr>';
+}
+
+function renderCharts(data) {
+  const ctx = document.getElementById("performanceChart");
+
+  if (performanceChart) performanceChart.destroy();
+
+  performanceChart = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels:data.graph.labels,
+      datasets:[
+        {
+          label:"Emails sent",
+          data:data.graph.sent,
+          borderColor:"#31d58a",
+          backgroundColor:"rgba(49,213,138,.12)",
+          fill:true,
+          tension:.35
+        },
+        {
+          label:"Replies",
+          data:data.graph.replies,
+          borderColor:"#63a5ff",
+          backgroundColor:"rgba(99,165,255,.1)",
+          fill:true,
+          tension:.35
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:"#b8c7da"}}
+      },
+      scales:{
+        x:{ticks:{color:"#91a1b8"},grid:{color:"#29364c"}},
+        y:{
+          beginAtZero:true,
+          ticks:{color:"#91a1b8",precision:0},
+          grid:{color:"#29364c"}
+        }
+      }
+    }
+  });
+
+  const names = ["Template A","Template B","Template C"];
+  const values = names.map(n => data.templateStats[n] || 0);
+
+  const templateCtx = document.getElementById("templateChart");
+  if (templateChart) templateChart.destroy();
+
+  templateChart = new Chart(templateCtx, {
+    type:"bar",
+    data:{
+      labels:names,
+      datasets:[{
+        label:"Emails sent",
+        data:values,
+        backgroundColor:["#31d58a","#63a5ff","#a78bfa"],
+        borderRadius:7
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:"#b8c7da"}}
+      },
+      scales:{
+        x:{ticks:{color:"#91a1b8"},grid:{display:false}},
+        y:{beginAtZero:true,ticks:{color:"#91a1b8",precision:0}}
+      }
+    }
+  });
+}
+
+async function prepare() {
+  if (!confirm("Generate up to 50 personalized Gmail drafts? Nothing will be sent.")) return;
+
+  notify("Generating drafts...");
+
+  try {
+    const result = await callServer("prepareDailyDrafts");
+    notify(result.message);
+    await refresh();
+  } catch (error) {
+    notify("Error: " + error.message);
+  }
+}
+
+async function prepareFollowups() {
+  if (!confirm("Generate drafts for follow-ups that are due?")) return;
+
+  notify("Checking follow-ups...");
+
+  try {
+    const result = await callServer("prepareFollowupDrafts");
+    notify(result.message);
+    await refresh();
+  } catch (error) {
+    notify("Error: " + error.message);
+  }
+}
+
+function selectAll() {
+  document.querySelectorAll(".draftCheck").forEach(c => {
+    c.checked = true;
+  });
+}
+
+async function sendSelected() {
+  const ids = Array.from(
+    document.querySelectorAll(".draftCheck:checked")
+  ).map(c => c.value);
+
+  if (!ids.length) {
+    notify("Select at least one draft.");
+    return;
+  }
+
+  if (!confirm(
+    "You are about to send " + ids.length +
+    " emails. Have you reviewed these drafts in Gmail?"
+  )) return;
+
+  notify("Sending approved emails...");
+
+  try {
+    const result = await callServer("sendSelectedDrafts", ids);
+    notify(result.message);
+    await refresh();
+  } catch (error) {
+    notify("Error: " + error.message);
+    await refresh();
+  }
+}
+
+async function syncReplies() {
+  notify("Checking Gmail for replies...");
+
+  try {
+    const result = await callServer("syncReplies");
+    notify(result.replies + " new replies detected.");
+    await refresh();
+  } catch (error) {
+    notify("Error: " + error.message);
+  }
+}
+
+function showSection(id) {
+  document.getElementById(id)?.scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+}
+
+refresh();
+</script>
+</body>
+</html>
